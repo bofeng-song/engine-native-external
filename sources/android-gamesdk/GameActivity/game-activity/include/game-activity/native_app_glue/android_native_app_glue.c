@@ -176,6 +176,10 @@ static void process_cmd(struct android_app* app,
     android_app_post_exec_cmd(app, cmd);
 }
 
+extern bool perform_in_game_thread(struct android_app *app, void func(void *app));
+
+extern void try_game_thread_loop();
+
 // This is run on a separate thread (i.e: not the main thread).
 static void* android_app_entry(void* param) {
     struct android_app* android_app = (struct android_app*)param;
@@ -208,6 +212,8 @@ static void* android_app_entry(void* param) {
     android_main(android_app);
 
     android_app_destroy(android_app);
+
+    try_game_thread_loop();
     return NULL;
 }
 
@@ -273,10 +279,14 @@ static struct android_app* android_app_create(GameActivity* activity,
     android_app->motionEventFilter = default_motion_filter;
 
     LOGV("Launching android_app_entry in a thread");
-    pthread_attr_t attr;
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-    pthread_create(&android_app->thread, &attr, android_app_entry, android_app);
+    if (perform_in_game_thread(android_app, android_app_entry)) {
+        LOGV("reuse last thread");
+    } else {
+        pthread_attr_t attr;
+        pthread_attr_init(&attr);
+        pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+        pthread_create(&android_app->thread, &attr, android_app_entry, android_app);
+    }
 
     // Wait for thread to start.
     pthread_mutex_lock(&android_app->mutex);
