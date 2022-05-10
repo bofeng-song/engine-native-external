@@ -178,8 +178,6 @@ static void process_cmd(struct android_app* app,
 
 extern bool perform_in_game_thread(struct android_app *app, void func(void *app));
 
-extern void try_game_thread_loop();
-
 // This is run on a separate thread (i.e: not the main thread).
 static void* android_app_entry(void* param) {
     struct android_app* android_app = (struct android_app*)param;
@@ -211,9 +209,8 @@ static void* android_app_entry(void* param) {
 
     android_main(android_app);
 
-    android_app_destroy(android_app);
-
-    try_game_thread_loop();
+    // called by AndroidPlatform
+//    android_app_destroy(android_app);
     return NULL;
 }
 
