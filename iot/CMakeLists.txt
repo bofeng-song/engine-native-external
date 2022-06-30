@@ -6,6 +6,7 @@ set_target_properties(crypto PROPERTIES
 
 add_library(freetype STATIC IMPORTED GLOBAL)
 set_target_properties(freetype PROPERTIES
+  INTERFACE_INCLUDE_DIRECTORIES ${platform_spec_path}/include/freetype
   IMPORTED_LOCATION ${platform_spec_path}/libfreetype.a
 )
 
